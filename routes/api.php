@@ -1,0 +1,24 @@
+<?php
+
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\ReviewController;
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+// Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function () {
+//         Route::apiResource('authors', AuthorController::class);
+//         Route::apiResource('books', BookController::class);
+//         Route::apiResource('genres', GenreController::class);
+//         Route::apiResource('reviews', ReviewController::class);
+// });
+
+Route::middleware(['auth:sanctum', 'api'])->group(function () {
+    Route::apiResource('authors', AuthorController::class);
+    Route::apiResource('books', BookController::class);
+    Route::apiResource('genres', GenreController::class);
+    Route::apiResource('reviews', ReviewController::class);
+});
