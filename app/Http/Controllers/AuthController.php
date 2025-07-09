@@ -16,20 +16,25 @@ class AuthController extends Controller
         ]);
         
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+            return back()->withErrors(['email' => 'Invalid credentials']);
         }
         
         $user = Auth::user();
-        $token = $user->createToken('api-token', ['*'], now()->addDay())->plainTextToken;
+        $expiresAt = now()->addDay();
+        $token = $user->createToken('api-token', ['*'], $expiresAt)->plainTextToken;
         
-        $user->forceFill([
-            'api_token_expires_at' => now()->addDay()
-        ])->save();
+        if ($request->wantsJson()) {
+            return response()->json([
+                'token' => $token,
+                'expires_at' => $expiresAt->toDateTimeString()
+            ]);
+        }
         
-        return response()->json([
-            'token' => $token,
-            'expires_at' => now()->addDay()->toDateTimeString()
-        ]);
+        // For web login, redirect to home
+        return redirect('/')->with('success', 'Logged in successfully');
     }
     
     public function logout(Request $request)
@@ -39,6 +44,11 @@ class AuthController extends Controller
             'api_token_expires_at' => null
         ])->save();
         
-        return response()->json(['message' => 'Logged out']);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Logged out']);
+        }
+        
+        // For web logout, redirect to login
+        return redirect('/login')->with('success', 'Logged out successfully');
     }
 }

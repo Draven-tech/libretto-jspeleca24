@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
+    public function index()
+    {
+        $reviews = Review::with('book')->paginate(10);
+        
+        if (request()->wantsJson()) {
+            return response()->json($reviews);
+        }
+        
+        // Web view would need to be implemented if needed
+        abort(404);
+    }
+
     public function createForBook(Book $book)
     {
         return view('reviews.create', compact('book'));
@@ -21,10 +33,26 @@ class ReviewController extends Controller
             'rating' => 'required|integer|between:1,5',
         ]);
 
-        Review::create($validated);
+        $review = Review::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json($review, 201);
+        }
 
         return redirect()->route('books.show', $request->book_id)
                          ->with('success', 'Review added successfully.');
+    }
+
+    public function show(Review $review)
+    {
+        $review->load('book');
+        
+        if (request()->wantsJson()) {
+            return response()->json($review);
+        }
+        
+        // Web view would need to be implemented if needed
+        abort(404);
     }
 
     public function edit(Review $review)
@@ -41,6 +69,10 @@ class ReviewController extends Controller
 
         $review->update($validated);
 
+        if ($request->wantsJson()) {
+            return response()->json($review);
+        }
+
         return redirect()->route('books.show', $review->book_id)
                          ->with('success', 'Review updated successfully.');
     }
@@ -49,6 +81,10 @@ class ReviewController extends Controller
     {
         $book_id = $review->book_id;
         $review->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(null, 204);
+        }
 
         return redirect()->route('books.show', $book_id)
                          ->with('success', 'Review deleted successfully.');

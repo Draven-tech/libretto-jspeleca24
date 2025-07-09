@@ -13,10 +13,12 @@ class CheckTokenExpiration
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle($request, Closure $next)
     {
-        if (!$request->user() || $request->user()->tokenIsExpired()) {
-            return response()->json(['message' => 'Unauthorized - Token expired'], 401);
+        $token = $request->user()->currentAccessToken();
+        
+        if ($token && $token->expires_at && now()->gt($token->expires_at)) {
+            return response()->json(['message' => 'Token expired'], 401);
         }
         
         return $next($request);

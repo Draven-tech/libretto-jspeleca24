@@ -10,6 +10,11 @@ class GenreController extends Controller
     public function index()
     {
         $genres = Genre::with('books')->paginate(9);
+        
+        if (request()->wantsJson()) {
+            return response()->json($genres);
+        }
+        
         return view('genres.index', compact('genres'));
     }
 
@@ -24,13 +29,23 @@ class GenreController extends Controller
             'name' => 'required|string|max:255|unique:genres',
         ]);
 
-        Genre::create($validated);
+        $genre = Genre::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json($genre, 201);
+        }
 
         return redirect()->route('genres.index')->with('success', 'Genre created successfully.');
     }
 
     public function show(Genre $genre)
     {
+        $genre->load('books');
+        
+        if (request()->wantsJson()) {
+            return response()->json($genre);
+        }
+        
         return view('genres.show', compact('genre'));
     }
 
@@ -47,12 +62,21 @@ class GenreController extends Controller
 
         $genre->update($validated);
 
+        if ($request->wantsJson()) {
+            return response()->json($genre);
+        }
+
         return redirect()->route('genres.index')->with('success', 'Genre updated successfully.');
     }
 
     public function destroy(Genre $genre)
     {
         $genre->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
         return redirect()->route('genres.index')->with('success', 'Genre deleted successfully.');
     }
 }

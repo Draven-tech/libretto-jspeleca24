@@ -12,6 +12,11 @@ class BookController extends Controller
     public function index()
     {
         $books = Book::with(['author', 'genres', 'reviews'])->paginate(9);
+        
+        if (request()->wantsJson()) {
+            return response()->json($books);
+        }
+        
         return view('books.index', compact('books'));
     }
 
@@ -19,6 +24,7 @@ class BookController extends Controller
     {
         $authors = Author::all();
         $genres = Genre::all();
+        
         return view('books.create', compact('authors', 'genres'));
     }
 
@@ -37,11 +43,21 @@ class BookController extends Controller
             $book->genres()->attach($request->genres);
         }
 
+        if ($request->wantsJson()) {
+            return response()->json($book->load(['author', 'genres']), 201);
+        }
+
         return redirect()->route('books.index')->with('success', 'Book created successfully.');
     }
 
     public function show(Book $book)
     {
+        $book->load(['author', 'genres', 'reviews']);
+        
+        if (request()->wantsJson()) {
+            return response()->json($book);
+        }
+        
         return view('books.show', compact('book'));
     }
 
@@ -49,6 +65,7 @@ class BookController extends Controller
     {
         $authors = Author::all();
         $genres = Genre::all();
+        
         return view('books.edit', compact('book', 'authors', 'genres'));
     }
 
@@ -67,12 +84,28 @@ class BookController extends Controller
             $book->genres()->sync($request->genres);
         }
 
+        if ($request->wantsJson()) {
+            return response()->json($book->load(['author', 'genres']));
+        }
+
         return redirect()->route('books.index')->with('success', 'Book updated successfully.');
     }
 
     public function destroy(Book $book)
     {
         $book->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
         return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
+    }
+
+    public function getBookReviews(Book $book)
+    {
+        $reviews = $book->reviews()->paginate(10);
+        
+        return response()->json($reviews);
     }
 }

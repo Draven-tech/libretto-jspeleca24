@@ -10,6 +10,11 @@ class AuthorController extends Controller
     public function index()
     {
         $authors = Author::with('books')->paginate(9);
+        
+        if (request()->wantsJson()) {
+            return response()->json($authors);
+        }
+        
         return view('authors.index', compact('authors'));
     }
 
@@ -24,13 +29,23 @@ class AuthorController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        Author::create($validated);
+        $author = Author::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json($author, 201);
+        }
 
         return redirect()->route('authors.index')->with('success', 'Author created successfully.');
     }
 
     public function show(Author $author)
     {
+        $author->load('books');
+        
+        if (request()->wantsJson()) {
+            return response()->json($author);
+        }
+        
         return view('authors.show', compact('author'));
     }
 
@@ -47,12 +62,21 @@ class AuthorController extends Controller
 
         $author->update($validated);
 
+        if ($request->wantsJson()) {
+            return response()->json($author);
+        }
+
         return redirect()->route('authors.index')->with('success', 'Author updated successfully.');
     }
 
     public function destroy(Author $author)
     {
         $author->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
         return redirect()->route('authors.index')->with('success', 'Author deleted successfully.');
     }
 }
