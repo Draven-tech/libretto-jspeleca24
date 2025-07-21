@@ -12,6 +12,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        $this->call([
+            TestUserSeeder::class,
+        ]);
+        
         \App\Models\Author::factory(10)->create()->each(function ($author) {
             $books = \App\Models\Book::factory(3)->create(['author_id' => $author->id]);
             $books->each(function ($book) {

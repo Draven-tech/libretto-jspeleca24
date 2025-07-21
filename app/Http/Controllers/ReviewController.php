@@ -16,7 +16,6 @@ class ReviewController extends Controller
             return response()->json($reviews);
         }
         
-        // Web view would need to be implemented if needed
         abort(404);
     }
 
@@ -88,5 +87,16 @@ class ReviewController extends Controller
 
         return redirect()->route('books.show', $book_id)
                          ->with('success', 'Review deleted successfully.');
+    }
+
+    public function getReviewsByBook(Book $book)
+    {
+        $reviews = Review::where('book_id', $book->id)->with('book')->paginate(10);
+        
+        if (request()->wantsJson()) {
+            return response()->json($reviews);
+        }
+        
+        abort(404);
     }
 }

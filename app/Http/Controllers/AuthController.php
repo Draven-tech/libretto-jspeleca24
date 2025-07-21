@@ -14,41 +14,50 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required'
         ]);
-        
+    
         if (!Auth::attempt($credentials)) {
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-            return back()->withErrors(['email' => 'Invalid credentials']);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
-        
+    
         $user = Auth::user();
-        $expiresAt = now()->addDay();
-        $token = $user->createToken('api-token', ['*'], $expiresAt)->plainTextToken;
         
-        if ($request->wantsJson()) {
+        // Check for existing valid token
+        $existingToken = $user->tokens()
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+    
+        if ($existingToken) {
+            $plainTextToken = $user->api_token;
+            
             return response()->json([
-                'token' => $token,
-                'expires_at' => $expiresAt->toDateTimeString()
+                'message' => 'Already logged in',
+                'token' => $plainTextToken,
+                'expires_at' => $existingToken->expires_at->toDateTimeString(),
             ]);
         }
-        
-        // For web login, redirect to home
-        return redirect('/')->with('success', 'Logged in successfully');
+    
+        // Create new token if none exists
+        $expiresAt = now()->addDay();
+        $tokenResult = $user->createToken('api-token', ['*'], $expiresAt);
+        $plainTextToken = $tokenResult->plainTextToken;
+    
+        // Store plain-text token in database (development only)
+        $user->forceFill([
+            'api_token' => $plainTextToken,
+            'api_token_expires_at' => $expiresAt
+        ])->save();
+    
+        return response()->json([
+            'token' => $plainTextToken,
+            'expires_at' => $expiresAt->toDateTimeString(),
+            'message' => 'Login successful'
+        ]);
     }
     
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
-        $request->user()->forceFill([
-            'api_token_expires_at' => null
-        ])->save();
-        
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'Logged out']);
-        }
-        
-        // For web logout, redirect to login
-        return redirect('/login')->with('success', 'Logged out successfully');
+        return response()->json(['message' => 'Logged out']);
     }
 }

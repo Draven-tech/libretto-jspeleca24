@@ -11,7 +11,7 @@ class BookController extends Controller
 {
     public function index()
     {
-        $books = Book::with(['author', 'genres', 'reviews'])->paginate(9);
+        $books = Book::with(['author', 'genres', 'reviews'])->paginate(15);
         
         if (request()->wantsJson()) {
             return response()->json($books);

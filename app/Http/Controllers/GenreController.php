@@ -9,7 +9,7 @@ class GenreController extends Controller
 {
     public function index()
     {
-        $genres = Genre::with('books')->paginate(9);
+        $genres = Genre::with('books')->paginate(15);
         
         if (request()->wantsJson()) {
             return response()->json($genres);

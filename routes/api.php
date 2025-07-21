@@ -17,4 +17,5 @@ Route::middleware(['auth:sanctum', CheckTokenExpiration::class])->group(function
     Route::apiResource('reviews', ReviewController::class);
     
     Route::get('/books/{book}/reviews', [BookController::class, 'getBookReviews']);
+    Route::get('/reviews/books/{book}', [ReviewController::class, 'getReviewsByBook']);
 });

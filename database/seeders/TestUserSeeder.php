@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;  // This is the correct import path
+use Illuminate\Support\Facades\Hash;
 
 class TestUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run()
     {
-        \App\Models\User::create([
-            'name' => 'ZEE',
-            'email' => 'admin@usjr.edu.ph',
-            'password' => bcrypt('admin123'),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@usjr.edu.ph'],
+            [
+                'name' => 'ZEE',
+                'password' => Hash::make('admin123'),
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }

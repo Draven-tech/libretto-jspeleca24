@@ -9,7 +9,7 @@ class AuthorController extends Controller
 {
     public function index()
     {
-        $authors = Author::with('books')->paginate(9);
+        $authors = Author::with('books')->paginate(15);
         
         if (request()->wantsJson()) {
             return response()->json($authors);
